@@ -1,0 +1,2 @@
+# Statisctics
+Custom chart view
