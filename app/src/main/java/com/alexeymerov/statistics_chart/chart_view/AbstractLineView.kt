@@ -1,5 +1,6 @@
 package com.alexeymerov.statistics_chart.chart_view
 
+import android.animation.Animator
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
@@ -8,8 +9,6 @@ import android.graphics.Path
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
-import androidx.core.animation.doOnEnd
-import androidx.core.animation.doOnStart
 import com.alexeymerov.statistics_chart.THEME_SHARED_KEY
 import com.alexeymerov.statistics_chart.model.ChartLine
 import com.alexeymerov.statistics_chart.utils.SPHelper
@@ -50,9 +49,20 @@ abstract class AbstractLineView(context: Context, attrs: AttributeSet?, defStyle
 		duration = 500
 		interpolator = AccelerateDecelerateInterpolator()
 		repeatMode = ValueAnimator.RESTART
-		doOnStart { needAnimateValues = true }
-		doOnEnd { needAnimateValues = false }
 		addUpdateListener { postInvalidate() }
+		addListener(object : Animator.AnimatorListener {
+			override fun onAnimationStart(animation: Animator?) {
+				needAnimateValues = true
+			}
+
+			override fun onAnimationEnd(animation: Animator?) {
+				needAnimateValues = false
+			}
+
+			override fun onAnimationRepeat(animation: Animator?) {}
+
+			override fun onAnimationCancel(animation: Animator?) {}
+		})
 	}
 
 	protected abstract var bottomLabelsList: List<String>

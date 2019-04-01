@@ -134,7 +134,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 				var startIndex = startIndex
 				var toIndex = startIndex + xValuesToDisplay
 				if (toIndex >= it.dataValues.size) toIndex = it.dataValues.size - 1
-				if (startIndex > toIndex) startIndex = toIndex - xValuesToDisplay
+				if (startIndex >= toIndex) startIndex = toIndex - xValuesToDisplay
 				if (startIndex < 0) startIndex = 0
 				it.dataValues.subList(startIndex, toIndex)
 			}
