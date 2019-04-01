@@ -5,7 +5,15 @@ import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.Rect
+import android.graphics.RectF
+import android.graphics.Typeface
 import android.util.AttributeSet
 import android.view.MotionEvent
 import androidx.annotation.ColorRes
@@ -17,7 +25,7 @@ import com.alexeymerov.statistics_chart.model.ChartLine
 import com.alexeymerov.statistics_chart.model.Popup
 import com.alexeymerov.statistics_chart.utils.dpToPx
 import com.alexeymerov.statistics_chart.utils.dpToPxFloat
-import java.util.*
+import java.util.Collections
 
 class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : AbstractLineView(context, attrs, defStyleAttr), UpdatableTheme {

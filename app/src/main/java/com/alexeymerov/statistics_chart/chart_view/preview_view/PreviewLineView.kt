@@ -7,7 +7,7 @@ import android.util.AttributeSet
 import com.alexeymerov.statistics_chart.chart_view.AbstractLineView
 import com.alexeymerov.statistics_chart.model.ChartLine
 import com.alexeymerov.statistics_chart.utils.dpToPxFloat
-import java.util.*
+import java.util.Collections
 
 class PreviewLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : AbstractLineView(context, attrs, defStyleAttr) {
@@ -32,14 +32,11 @@ class PreviewLineView @JvmOverloads constructor(context: Context, attrs: Attribu
 
 		if (vertical == 0) {
 			vertical = MIN_VERTICAL_GRID_NUM
-			chartLines
-				.takeIf { !it.isEmpty() }
-				?.asSequence()
-				?.filter { it.isEnabled }
-				?.map { it.dataValues }
-				?.map { Collections.max(it) }
-				?.filter { vertical < it }
-				?.forEach { vertical = it }
+			for (chartLine in chartLines) {
+				if (!chartLine.isEnabled) continue
+				val maxValue = Collections.max(chartLine.dataValues)
+				if (vertical < maxValue) vertical = maxValue
+			}
 		}
 
 		return vertical

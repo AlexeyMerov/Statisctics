@@ -13,8 +13,8 @@ import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStreamReader
 import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.collections.ArrayList
+import java.util.Date
+import java.util.Locale
 
 class ChartDataParser {
 
