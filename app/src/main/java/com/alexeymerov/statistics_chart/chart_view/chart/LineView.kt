@@ -124,22 +124,6 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 		if (needAnimateValues) return valueAnimator.getAnimatedValue(LINES_PROPERTY) as Int
 
 		vertical = MIN_VERTICAL_GRID_NUM
-//		chartLines
-//			.takeIf { !it.isEmpty() }
-//			?.asSequence()
-//			?.filter { it.isEnabled }
-//			?.map {
-//				var startIndex = startIndex
-//				var toIndex = startIndex + xValuesToDisplay
-//				if (toIndex >= it.dataValues.size) toIndex = it.dataValues.size - 1
-//				if (startIndex >= toIndex) startIndex = toIndex - xValuesToDisplay
-//				if (startIndex < 0) startIndex = 0
-//				it.dataValues.subList(startIndex, toIndex)
-//			}
-//			?.map { Collections.max(it) }
-//			?.filter { vertical < it }
-//			?.forEach { vertical = it }
-
 		for (chartLine in chartLines) {
 			if (!chartLine.isEnabled) continue
 
@@ -195,9 +179,14 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 		for (s in bottomLabelsList) {
 			bottomTextPaint.getTextBounds(s, 0, s.length, bottomTextRect)
-			if (bottomTextHeight < bottomTextRect.height()) bottomTextHeight = bottomTextRect.height()
-			if (longestWidth < bottomTextRect.width()) longestWidth = bottomTextRect.width()
-			if (bottomTextDescent < Math.abs(bottomTextRect.bottom)) bottomTextDescent = Math.abs(bottomTextRect.bottom)
+			val height = bottomTextRect.height()
+			if (bottomTextHeight < height) bottomTextHeight = height
+
+			val width = bottomTextRect.width()
+			if (longestWidth < width) longestWidth = width
+
+			val abs = Math.abs(bottomTextRect.bottom)
+			if (bottomTextDescent < abs) bottomTextDescent = abs
 		}
 
 		if (leftPadding < longestWidth / 2) leftPadding = longestWidth / 2
@@ -209,8 +198,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	override fun onDraw(canvas: Canvas) {
 		drawLines(canvas)
-		drawBackgroundHorizontalLines(canvas)
-		drawLeftLabels(canvas)
+		drawLeftLabelsWithLines(canvas)
 		drawBottomLabels(canvas)
 		drawPopup(canvas)
 	}
@@ -218,14 +206,15 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 	private fun drawPopup(canvas: Canvas) {
 		if (popupList.isEmpty()) return
 
-		val yStep = height / getVerticalMaxValue().toFloat()
+		val heightWithMargins = getHeightWithMargins()
+		val yStep = heightWithMargins / getVerticalMaxValue().toFloat()
 
 		var longestWord = ""
 
 		val x = popupList[0].x
 		val dateString = popupList[0].dateString
 
-		canvas.drawLine(x, 0f, x, height.toFloat(), backgroundLinePaint)
+		canvas.drawLine(x, 0f, x, heightWithMargins, backgroundLinePaint)
 
 		var disabledLinesCount = 0
 		for (popup in popupList) {
@@ -233,13 +222,13 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 				disabledLinesCount++
 				continue
 			}
-			val value = popup.value
 
+			val value = popup.value
 			val fullText = "${popup.line.name}: $value"
 			val valueLength = fullText.length
 			if (valueLength > longestWord.length) longestWord = fullText
 
-			val y = height - (value.toFloat() * yStep)
+			val y = heightWithMargins - (value.toFloat() * yStep)
 
 			bigDotPaint.color = popup.color
 			canvas.drawCircle(x, y, DOT_BIG_RADIUS, bigDotPaint)
@@ -261,41 +250,49 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 		val lineHeight = rectText.height().toFloat()
 		val endY = startY + (lineHeight * linesCount) + (MARGIN_8 * linesCount) + MARGIN_16
 
+		drawPopupRect(canvas, startX, startY, endX, endY)
+		drawPopupText(canvas, startX, startY, dateString, lineHeight)
+	}
+
+	private fun drawPopupText(canvas: Canvas, startX: Float, startY: Float,
+							  dateString: String, lineHeight: Float) {
+		val startXForText = startX + MARGIN_8
+		var lastTextY = startY + MARGIN_16
+		popupTextPaint.color = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
+		canvas.drawText(dateString, startXForText, lastTextY, popupTextPaint)
+
+		lastTextY += MARGIN_8
+		for (popup in popupList) {
+			if (!popup.line.isEnabled) continue
+			lastTextY += lineHeight + MARGIN_8
+			popupTextPaint.color = popup.color
+
+			val value = popup.value.toString()
+			val text = "${popup.line.name}: $value"
+			canvas.drawText(text, startXForText, lastTextY, popupTextPaint)
+		}
+	}
+
+	private fun drawPopupRect(canvas: Canvas, startX: Float, startY: Float, endX: Float, endY: Float) {
 		val mainRect = RectF(startX, startY, endX, endY)
 		val shadowRect = RectF(startX - SHADOW_SIZE, startY - SHADOW_SIZE,
-				endX + SHADOW_SIZE, endY + SHADOW_SIZE
-		)
+				endX + SHADOW_SIZE, endY + SHADOW_SIZE)
 
 		canvas.drawRoundRect(shadowRect, POPUP_SHADOW_RADIUS, POPUP_SHADOW_RADIUS, popupShadowRectPaint)
 		canvas.drawRoundRect(mainRect, POPUP_RADIUS, POPUP_RADIUS, popupRectPaint)
-
-		var lastTextY = startY + MARGIN_16
-		popupTextPaint.color = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
-		canvas.drawText(dateString, startX + MARGIN_8, lastTextY, popupTextPaint)
-
-		popupList.asSequence()
-			.filter { it.line.isEnabled }
-			.forEachIndexed { index, popup ->
-				lastTextY += rectText.height()
-				if (index > 0) lastTextY += MARGIN_8
-				popupTextPaint.color = popup.color
-
-				val value = popup.value.toString()
-				val text = "${popup.line.name}: $value"
-				canvas.drawText(text, startX + MARGIN_8, lastTextY + MARGIN_16, popupTextPaint)
-			}
 	}
 
 	override fun drawLines(canvas: Canvas) {
-		val yStep = height.toFloat() / getVerticalMaxValue().toFloat()
+		val heightFloat = getHeightWithMargins()
+		val yStep = heightFloat / getVerticalMaxValue().toFloat()
 
 		for (chartLineEntry in chartLines) {
-			val dataValues = chartLineEntry.dataValues
 			if (!chartLineEntry.isEnabled) continue
+			val dataValues = chartLineEntry.dataValues
 			for (xIndex in 0 until xValuesToDisplay) {
 				val dataIndex = xIndex + startIndex
 				if (dataIndex >= dataValues.size) continue
-				val yAxis = height.toFloat() - (dataValues[dataIndex].toFloat() * yStep)
+				val yAxis = heightFloat - (dataValues[dataIndex].toFloat() * yStep)
 				when (xIndex) {
 					0 -> linePath.moveTo(HORIZONTAL_MARGIN, yAxis)
 					else -> linePath.lineTo(HORIZONTAL_MARGIN + xIndex * stepX, yAxis)
@@ -307,35 +304,24 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 		}
 	}
 
-	private fun drawBackgroundHorizontalLines(canvas: Canvas) {
+	private fun drawLeftLabelsWithLines(canvas: Canvas) {
 		val currentMaxValue = getVerticalMaxValue()
-		val yStep = height.toFloat() / currentMaxValue.toFloat()
-
+		val yStep = getHeightWithMargins() / currentMaxValue.toFloat()
 		val stopX = width.toFloat()
-		for (i in currentMaxValue downTo 0) {
-			if (i == 0) continue
-			if (i % leftLabelsModule == 0) {
-				val yAxisValue = i * yStep - bottomTextHeight - bottomTextDescent - BOTTOM_LABELS_TOP_MARGIN
-				linesPath.moveTo(0f, yAxisValue)
-				linesPath.lineTo(stopX, yAxisValue)
-			}
+
+		for (i in 0 until currentMaxValue step leftLabelsModule) {
+			val yAxisValue = (i * yStep)
+			val text = (currentMaxValue - i).toString()
+			linesPath.moveTo(0f, yAxisValue)
+			linesPath.lineTo(stopX, yAxisValue)
+			canvas.drawText(text, 0f, yAxisValue - LEFT_LABEL_BOTTOM_MARGIN, textPaint)
 		}
 		canvas.drawPath(linesPath, backgroundLinePaint)
 		linesPath.reset()
 	}
 
-	private fun drawLeftLabels(canvas: Canvas) {
-		val currentMaxValue = getVerticalMaxValue()
-		val yStep = height.toFloat() / currentMaxValue.toFloat()
-		var y: Float
-
-		for (i in currentMaxValue downTo 0) {
-			if (i % leftLabelsModule != 0) continue
-			y = (i * yStep) - bottomTextHeight - bottomTextDescent - BOTTOM_LABELS_TOP_MARGIN - LEFT_LABEL_BOTTOM_MARGIN
-			val text = (currentMaxValue - i).toString()
-			canvas.drawText(text, 0f, y, textPaint)
-		}
-	}
+	private fun getHeightWithMargins() =
+		height.toFloat() - bottomTextHeight - bottomTextDescent - BOTTOM_LABELS_TOP_MARGIN
 
 	private fun drawBottomLabels(canvas: Canvas) {
 		var lastX = 0f
@@ -368,8 +354,9 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
 		super.onLayout(changed, left, top, right, bottom)
-		stepX = (width.toFloat() / bottomLabelsList.size.toFloat()) * 4
-		xValuesToDisplay = (width / stepX).toInt() + 1
+		val widthFloat = width.toFloat()
+		stepX = (widthFloat / bottomLabelsList.size.toFloat()) * 4
+		xValuesToDisplay = (widthFloat / stepX).toInt() + 1
 		startIndex = bottomLabelsList.size - xValuesToDisplay
 
 		if (needUpdatePreview) {
