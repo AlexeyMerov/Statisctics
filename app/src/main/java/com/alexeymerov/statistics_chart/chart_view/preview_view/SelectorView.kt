@@ -5,14 +5,20 @@ import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.*
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.Paint
+import android.graphics.PorterDuff
+import android.graphics.PorterDuffXfermode
+import android.graphics.RectF
+
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
+import com.alexeymerov.statistics_chart.App
 import com.alexeymerov.statistics_chart.R
-import com.alexeymerov.statistics_chart.THEME_SHARED_KEY
 import com.alexeymerov.statistics_chart.interfaces.PreviewScrollListener
 import com.alexeymerov.statistics_chart.interfaces.UpdatableTheme
 import com.alexeymerov.statistics_chart.utils.SPHelper
@@ -21,10 +27,10 @@ import com.alexeymerov.statistics_chart.utils.dpToPxFloat
 class SelectorView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), UpdatableTheme {
 
-	private companion object {
-		const val IN_ACTIVE_PROPERTY = "inActivePaint"
-		const val BOUNDS_PROPERTY = "boundsPaint"
-	}
+	private var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
+
+	private val IN_ACTIVE_PROPERTY = "inActivePaint"
+	private val BOUNDS_PROPERTY = "boundsPaint"
 
 	private val touchEventProcessor = TouchEventProcessor()
 
@@ -39,8 +45,6 @@ class SelectorView @JvmOverloads constructor(context: Context, attrs: AttributeS
 
 	private val verticalPadding = 2.dpToPxFloat()
 	private val horizontalPadding = 8.dpToPxFloat()
-
-	private var isLightThemeEnabled = SPHelper.getShared(THEME_SHARED_KEY, true)
 
 	private val defaultPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
 		style = Paint.Style.FILL

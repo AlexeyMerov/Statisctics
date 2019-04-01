@@ -7,15 +7,13 @@ import android.util.AttributeSet
 import com.alexeymerov.statistics_chart.chart_view.AbstractLineView
 import com.alexeymerov.statistics_chart.model.ChartLine
 import com.alexeymerov.statistics_chart.utils.dpToPxFloat
-import java.util.*
+import java.util.Collections
 
 class PreviewLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : AbstractLineView(context, attrs, defStyleAttr) {
 
-	private companion object {
-		val MARGIN = 3.dpToPxFloat()
-		const val LINES_PROPERTY_NAME = "lines"
-	}
+	private val LINES_PROPERTY_NAME = "lines"
+	private val MARGIN = 3.dpToPxFloat()
 
 	override var bottomLabelsList = listOf<String>()
 
@@ -33,15 +31,12 @@ class PreviewLineView @JvmOverloads constructor(context: Context, attrs: Attribu
 		if (needAnimateValues) return valueAnimator.getAnimatedValue(LINES_PROPERTY_NAME) as Int
 
 		if (vertical == 0) {
-			vertical = AbstractLineView.MIN_VERTICAL_GRID_NUM
-			chartLines
-				.takeIf { !it.isEmpty() }
-				?.asSequence()
-				?.filter { it.isEnabled }
-				?.map { it.dataValues }
-				?.map { Collections.max(it) }
-				?.filter { vertical < it }
-				?.forEach { vertical = it }
+			vertical = MIN_VERTICAL_GRID_NUM
+			for (chartLine in chartLines) {
+				if (!chartLine.isEnabled) continue
+				val maxValue = Collections.max(chartLine.dataValues)
+				if (vertical < maxValue) vertical = maxValue
+			}
 		}
 
 		return vertical
@@ -82,7 +77,6 @@ class PreviewLineView @JvmOverloads constructor(context: Context, attrs: Attribu
 			canvas.drawPath(linePath, linePaint)
 			linePath.rewind()
 		}
-
 	}
 
 	override fun toggleLine(lineIndex: Int) {

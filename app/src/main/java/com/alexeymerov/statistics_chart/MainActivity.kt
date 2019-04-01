@@ -3,13 +3,21 @@ package com.alexeymerov.statistics_chart
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuItem
+import android.view.MotionEvent
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import androidx.annotation.ColorRes
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.alexeymerov.statistics_chart.App.Companion.THEME_SHARED_KEY
 import com.alexeymerov.statistics_chart.chart_view.ChartView
 import com.alexeymerov.statistics_chart.interfaces.UpdatableTheme
 import com.alexeymerov.statistics_chart.utils.ChartDataParser
@@ -23,10 +31,12 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 	private val chartDataParser by lazy { ChartDataParser() }
 	private var themeMenuItem: MenuItem? = null
 	private var isLightThemeEnabled = true
+	private val moonIcon by lazy { ContextCompat.getDrawable(this, R.drawable.ic_moon) }
+	private val sunIcon by lazy { ContextCompat.getDrawable(this, R.drawable.ic_sun) }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		isLightThemeEnabled = SPHelper.getShared(THEME_SHARED_KEY, true)
-		setTheme(if (isLightThemeEnabled) R.style.AppThemeLight else R.style.AppThemeDark)
+		setTheme(if (isLightThemeEnabled) R.style.AppTheme else R.style.AppThemeDark)
 
 		super.onCreate(savedInstanceState)
 		setContentView(createLayout())
@@ -50,7 +60,6 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 		}.apply {
 			layoutParams = layoutParams()
 			updateColors(this, R.color.grey_50, R.color.darkColorPrimaryDark, false)
-			isNestedScrollingEnabled = true
 		}
 
 		linearLayout = LinearLayout(this).apply {
@@ -68,22 +77,16 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 		ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 
 	override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-		menuInflater.inflate(R.menu.main_menu, menu)
-		themeMenuItem = menu?.findItem(R.id.action)
-		themeMenuItem?.icon = when {
-			isLightThemeEnabled -> getDrawable(R.drawable.ic_moon)
-			else -> getDrawable(R.drawable.ic_sun)
-		}
+		themeMenuItem = menu?.add(Menu.NONE, 0, Menu.NONE, getString(R.string.switch_themes))
+		themeMenuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+		themeMenuItem?.icon = if (isLightThemeEnabled) moonIcon else sunIcon
 		return super.onCreateOptionsMenu(menu)
 	}
 
 	override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-		if (item?.itemId == R.id.action) {
+		if (item?.itemId == 0) {
 			isLightThemeEnabled = !isLightThemeEnabled
-			themeMenuItem?.icon = when {
-				isLightThemeEnabled -> getDrawable(R.drawable.ic_moon)
-				else -> getDrawable(R.drawable.ic_sun)
-			}
+			themeMenuItem?.icon = if (isLightThemeEnabled) moonIcon else sunIcon
 			SPHelper.setShared(THEME_SHARED_KEY, isLightThemeEnabled)
 			updateTheme(isLightThemeEnabled)
 		}
@@ -91,7 +94,7 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 	}
 
 	override fun updateTheme(lightThemeEnabled: Boolean) {
-		updateStatusBar()
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) updateStatusBar()
 		updateToolbar()
 		updateColors(scrollView, R.color.grey_50, R.color.darkColorPrimaryDark, true)
 		updateColors(linearLayout, R.color.white, R.color.darkBackground, true)
@@ -120,6 +123,7 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 		colorAnimation.start()
 	}
 
+	@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 	private fun updateStatusBar() {
 		window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
 		window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)

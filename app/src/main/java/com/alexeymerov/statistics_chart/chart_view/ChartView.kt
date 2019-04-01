@@ -8,17 +8,16 @@ import android.content.res.ColorStateList
 import android.graphics.Color
 import android.util.AttributeSet
 import android.view.View
+import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.view.ViewGroup.LayoutParams.WRAP_CONTENT
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.ColorRes
-import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.core.content.ContextCompat
-import androidx.core.view.children
 import androidx.core.widget.CompoundButtonCompat
+import com.alexeymerov.statistics_chart.App
 import com.alexeymerov.statistics_chart.R
-import com.alexeymerov.statistics_chart.THEME_SHARED_KEY
 import com.alexeymerov.statistics_chart.chart_view.chart.LineView
 import com.alexeymerov.statistics_chart.chart_view.preview_view.PreviewScrollView
 import com.alexeymerov.statistics_chart.interfaces.PreviewScrollListener
@@ -28,13 +27,14 @@ import com.alexeymerov.statistics_chart.utils.SPHelper
 import com.alexeymerov.statistics_chart.utils.dpToPx
 
 class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : ConstraintLayout(context, attrs, defStyleAttr), PreviewScrollListener, UpdatableTheme {
+) : LinearLayout(context, attrs, defStyleAttr), PreviewScrollListener, UpdatableTheme {
 
-	private companion object {
-		val MARGIN_8 = 8.dpToPx()
-		val MARGIN_16 = 16.dpToPx()
-		const val COLOR_PROPERTY = "color"
-	}
+	private var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
+
+	private val MARGIN_8 = 8.dpToPx()
+	private val MARGIN_16 = 16.dpToPx()
+
+	private val COLOR_PROPERTY = "color"
 
 	private val titleView: TextView
 	private val lineView: LineView
@@ -46,13 +46,11 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 	private val chartHeight = onePartHeight * 4
 	private val scrollBarHeight = totalHeight / 6
 
-	private var isLightThemeEnabled = SPHelper.getShared(THEME_SHARED_KEY, true)
-
 	private lateinit var colorAnimation: ValueAnimator
 
 	init {
-		if (id == View.NO_ID) id = View.generateViewId()
 		setPadding(MARGIN_16, MARGIN_8, MARGIN_16, MARGIN_8)
+		orientation = VERTICAL
 		clipChildren = true
 		clipToPadding = true
 
@@ -61,10 +59,8 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 		previewScrollBar = createPreviewLineView()
 		lineNamesList = createLineNamesList()
 
-		setLayoutParams()
-
-		addView(lineView)
 		addView(titleView)
+		addView(lineView)
 		addView(previewScrollBar)
 		addView(lineNamesList)
 	}
@@ -81,7 +77,6 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 	}
 
 	private fun createTitleView() = TextView(context).apply {
-		id = View.generateViewId()
 		textSize = 18f
 		layoutParams = LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
 			setMargins(0, 0, 0, MARGIN_8)
@@ -92,55 +87,24 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 	}
 
 	private fun createLineView() = LineView(context).apply {
-		id = View.generateViewId()
-		layoutParams = LayoutParams(0, chartHeight)
+		layoutParams = LayoutParams(MATCH_PARENT, chartHeight)
 		onDataLoaded = { previewScrollBar.setPreviewSize(lineView.width.toFloat() / 4f) }
 	}
 
 	private fun createPreviewLineView() = PreviewScrollView(context).apply {
-		id = View.generateViewId()
-		isNestedScrollingEnabled = false
-		layoutParams = LayoutParams(0, scrollBarHeight).apply {
+		layoutParams = LayoutParams(MATCH_PARENT, scrollBarHeight).apply {
 			setMargins(0, MARGIN_16, 0, 0)
 		}
 		setScrollListener(this@ChartView)
 	}
 
 	private fun createLineNamesList() = LinearLayout(context).apply {
-		id = View.generateViewId()
 		orientation = LinearLayout.VERTICAL
-		layoutParams = LayoutParams(0, WRAP_CONTENT).apply {
+		layoutParams = LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply {
 			setMargins(0, MARGIN_8, 0, 0)
 		}
 		val color = if (isLightThemeEnabled) R.color.white else R.color.darkBackground
 		setBackgroundColor(ContextCompat.getColor(context, color))
-	}
-
-	private fun setLayoutParams() {
-		titleView.layoutParams = (titleView.layoutParams as LayoutParams).apply {
-			startToStart = LayoutParams.PARENT_ID
-			topToTop = LayoutParams.PARENT_ID
-			bottomToTop = lineView.id
-		}
-
-		lineView.layoutParams = (lineView.layoutParams as LayoutParams).apply {
-			startToStart = LayoutParams.PARENT_ID
-			endToEnd = LayoutParams.PARENT_ID
-			topToBottom = titleView.id
-			bottomToTop = previewScrollBar.id
-		}
-
-		previewScrollBar.layoutParams = (previewScrollBar.layoutParams as LayoutParams).apply {
-			startToStart = LayoutParams.PARENT_ID
-			endToEnd = LayoutParams.PARENT_ID
-			topToBottom = lineView.id
-		}
-
-		lineNamesList.layoutParams = (lineNamesList.layoutParams as LayoutParams).apply {
-			startToStart = LayoutParams.PARENT_ID
-			endToEnd = LayoutParams.PARENT_ID
-			topToBottom = previewScrollBar.id
-		}
 	}
 
 	fun setDataList(chartLines: List<ChartLine>, labelsList: List<String>) {
@@ -148,14 +112,14 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 		previewScrollBar.setData(chartLines, labelsList)
 
 		lineNamesList.removeAllViews()
+		val color = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
+		val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
 		chartLines.forEachIndexed { index, chartLine ->
 			val checkBox = CheckBox(context).apply {
 				text = chartLine.name
 				textSize = 16f
 				isChecked = true
-				val color = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
 				setTextColor(color)
-				val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
 				val colors = intArrayOf(chartLines[index].color, Color.GRAY)
 				CompoundButtonCompat.setButtonTintList(this, ColorStateList(states, colors))
 				layoutParams = LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
@@ -184,9 +148,10 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 		val color = if (isLightThemeEnabled) R.color.light_blue_2 else R.color.light_blue
 		titleView.setTextColor(ContextCompat.getColor(context, color))
 		updateColors(lineNamesList, R.color.white, R.color.darkBackground)
-		lineNamesList.children.forEach {
-			val textColor = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
-			(it as? CheckBox)?.setTextColor(textColor)
+		val textColor = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
+		for (i in 0 until lineNamesList.childCount) {
+			val child = lineNamesList.getChildAt(i)
+			(child as? CheckBox)?.setTextColor(textColor)
 		}
 	}
 
