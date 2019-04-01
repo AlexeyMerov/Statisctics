@@ -93,7 +93,6 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 	}
 
 	private fun createPreviewLineView() = PreviewScrollView(context).apply {
-		isNestedScrollingEnabled = false
 		layoutParams = LayoutParams(MATCH_PARENT, scrollBarHeight).apply {
 			setMargins(0, MARGIN_16, 0, 0)
 		}
@@ -114,14 +113,14 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 		previewScrollBar.setData(chartLines, labelsList)
 
 		lineNamesList.removeAllViews()
+		val color = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
+		val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
 		chartLines.forEachIndexed { index, chartLine ->
 			val checkBox = CheckBox(context).apply {
 				text = chartLine.name
 				textSize = 16f
 				isChecked = true
-				val color = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
 				setTextColor(color)
-				val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
 				val colors = intArrayOf(chartLines[index].color, Color.GRAY)
 				CompoundButtonCompat.setButtonTintList(this, ColorStateList(states, colors))
 				layoutParams = LayoutParams(WRAP_CONTENT, WRAP_CONTENT).apply {
@@ -150,9 +149,9 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 		val color = if (isLightThemeEnabled) R.color.light_blue_2 else R.color.light_blue
 		titleView.setTextColor(ContextCompat.getColor(context, color))
 		updateColors(lineNamesList, R.color.white, R.color.darkBackground)
+		val textColor = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
 		for (i in 0 until lineNamesList.childCount) {
 			val child = lineNamesList.getChildAt(i)
-			val textColor = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
 			(child as? CheckBox)?.setTextColor(textColor)
 		}
 	}

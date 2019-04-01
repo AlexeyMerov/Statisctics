@@ -218,7 +218,6 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 				disabledLinesCount++
 				continue
 			}
-			val color = popup.color
 			val value = popup.value
 
 			val fullText = "${popup.line.name}: $value"
@@ -227,7 +226,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 			val y = height - (value.toFloat() * yStep)
 
-			bigDotPaint.color = color
+			bigDotPaint.color = popup.color
 			canvas.drawCircle(x, y, DOT_BIG_RADIUS, bigDotPaint)
 			canvas.drawCircle(x, y, DOT_SMALL_RADIUS, smallDotPaint)
 		}

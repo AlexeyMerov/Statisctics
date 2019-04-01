@@ -3,11 +3,13 @@ package com.alexeymerov.statistics_chart
 import android.animation.ArgbEvaluator
 import android.animation.ValueAnimator
 import android.graphics.drawable.ColorDrawable
+import android.os.Build
 import android.os.Bundle
 import android.view.*
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import androidx.annotation.ColorRes
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import com.alexeymerov.statistics_chart.chart_view.ChartView
@@ -26,7 +28,7 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		isLightThemeEnabled = SPHelper.getShared(THEME_SHARED_KEY, true)
-		setTheme(if (isLightThemeEnabled) R.style.AppThemeLight else R.style.AppThemeDark)
+		setTheme(if (isLightThemeEnabled) R.style.AppTheme else R.style.AppThemeDark)
 
 		super.onCreate(savedInstanceState)
 		setContentView(createLayout())
@@ -50,7 +52,6 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 		}.apply {
 			layoutParams = layoutParams()
 			updateColors(this, R.color.grey_50, R.color.darkColorPrimaryDark, false)
-			isNestedScrollingEnabled = true
 		}
 
 		linearLayout = LinearLayout(this).apply {
@@ -71,8 +72,8 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 		menuInflater.inflate(R.menu.main_menu, menu)
 		themeMenuItem = menu?.findItem(R.id.action)
 		themeMenuItem?.icon = when {
-			isLightThemeEnabled -> getDrawable(R.drawable.ic_moon)
-			else -> getDrawable(R.drawable.ic_sun)
+			isLightThemeEnabled -> ContextCompat.getDrawable(this, R.drawable.ic_moon)
+			else -> ContextCompat.getDrawable(this, R.drawable.ic_sun)
 		}
 		return super.onCreateOptionsMenu(menu)
 	}
@@ -81,8 +82,8 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 		if (item?.itemId == R.id.action) {
 			isLightThemeEnabled = !isLightThemeEnabled
 			themeMenuItem?.icon = when {
-				isLightThemeEnabled -> getDrawable(R.drawable.ic_moon)
-				else -> getDrawable(R.drawable.ic_sun)
+				isLightThemeEnabled -> ContextCompat.getDrawable(this, R.drawable.ic_moon)
+				else -> ContextCompat.getDrawable(this, R.drawable.ic_sun)
 			}
 			SPHelper.setShared(THEME_SHARED_KEY, isLightThemeEnabled)
 			updateTheme(isLightThemeEnabled)
@@ -91,7 +92,7 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 	}
 
 	override fun updateTheme(lightThemeEnabled: Boolean) {
-		updateStatusBar()
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) updateStatusBar()
 		updateToolbar()
 		updateColors(scrollView, R.color.grey_50, R.color.darkColorPrimaryDark, true)
 		updateColors(linearLayout, R.color.white, R.color.darkBackground, true)
@@ -120,6 +121,7 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 		colorAnimation.start()
 	}
 
+	@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 	private fun updateStatusBar() {
 		window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
 		window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
