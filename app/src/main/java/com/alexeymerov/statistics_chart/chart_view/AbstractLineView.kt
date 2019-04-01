@@ -9,19 +9,18 @@ import android.graphics.Path
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
-import com.alexeymerov.statistics_chart.THEME_SHARED_KEY
+import com.alexeymerov.statistics_chart.App
 import com.alexeymerov.statistics_chart.model.ChartLine
 import com.alexeymerov.statistics_chart.utils.SPHelper
 import com.alexeymerov.statistics_chart.utils.dpToPxFloat
 
-abstract class AbstractLineView(context: Context, attrs: AttributeSet?, defStyleAttr: Int
+abstract class AbstractLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null,
+														  defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-	protected companion object {
-		const val MIN_VERTICAL_GRID_NUM = 4
-	}
+	protected var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
 
-	protected var isLightThemeEnabled = SPHelper.getShared(THEME_SHARED_KEY, true)
+	protected val MIN_VERTICAL_GRID_NUM = 4
 
 	protected var xValuesToDisplay = 24
 		get() {
@@ -37,6 +36,8 @@ abstract class AbstractLineView(context: Context, attrs: AttributeSet?, defStyle
 	protected val linePath = Path()
 
 	protected var needAnimateValues = false
+
+	protected var stepX = 0f
 
 	protected val linePaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
 		style = Paint.Style.STROKE
@@ -66,8 +67,6 @@ abstract class AbstractLineView(context: Context, attrs: AttributeSet?, defStyle
 	}
 
 	protected abstract var bottomLabelsList: List<String>
-
-	var stepX = 0f
 
 	protected abstract fun drawLines(canvas: Canvas)
 

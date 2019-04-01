@@ -12,10 +12,8 @@ import java.util.*
 class PreviewLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : AbstractLineView(context, attrs, defStyleAttr) {
 
-	private companion object {
-		val MARGIN = 3.dpToPxFloat()
-		const val LINES_PROPERTY_NAME = "lines"
-	}
+	private val LINES_PROPERTY_NAME = "lines"
+	private val MARGIN = 3.dpToPxFloat()
 
 	override var bottomLabelsList = listOf<String>()
 
@@ -33,7 +31,7 @@ class PreviewLineView @JvmOverloads constructor(context: Context, attrs: Attribu
 		if (needAnimateValues) return valueAnimator.getAnimatedValue(LINES_PROPERTY_NAME) as Int
 
 		if (vertical == 0) {
-			vertical = AbstractLineView.MIN_VERTICAL_GRID_NUM
+			vertical = MIN_VERTICAL_GRID_NUM
 			chartLines
 				.takeIf { !it.isEmpty() }
 				?.asSequence()
@@ -82,7 +80,6 @@ class PreviewLineView @JvmOverloads constructor(context: Context, attrs: Attribu
 			canvas.drawPath(linePath, linePaint)
 			linePath.rewind()
 		}
-
 	}
 
 	override fun toggleLine(lineIndex: Int) {

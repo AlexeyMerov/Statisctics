@@ -16,8 +16,8 @@ import android.widget.TextView
 import androidx.annotation.ColorRes
 import androidx.core.content.ContextCompat
 import androidx.core.widget.CompoundButtonCompat
+import com.alexeymerov.statistics_chart.App
 import com.alexeymerov.statistics_chart.R
-import com.alexeymerov.statistics_chart.THEME_SHARED_KEY
 import com.alexeymerov.statistics_chart.chart_view.chart.LineView
 import com.alexeymerov.statistics_chart.chart_view.preview_view.PreviewScrollView
 import com.alexeymerov.statistics_chart.interfaces.PreviewScrollListener
@@ -29,11 +29,12 @@ import com.alexeymerov.statistics_chart.utils.dpToPx
 class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : LinearLayout(context, attrs, defStyleAttr), PreviewScrollListener, UpdatableTheme {
 
-	private companion object {
-		val MARGIN_8 = 8.dpToPx()
-		val MARGIN_16 = 16.dpToPx()
-		const val COLOR_PROPERTY = "color"
-	}
+	private var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
+
+	private val MARGIN_8 = 8.dpToPx()
+	private val MARGIN_16 = 16.dpToPx()
+
+	private val COLOR_PROPERTY = "color"
 
 	private val titleView: TextView
 	private val lineView: LineView
@@ -44,8 +45,6 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 	private val onePartHeight = (totalHeight / 5)
 	private val chartHeight = onePartHeight * 4
 	private val scrollBarHeight = totalHeight / 6
-
-	private var isLightThemeEnabled = SPHelper.getShared(THEME_SHARED_KEY, true)
 
 	private lateinit var colorAnimation: ValueAnimator
 

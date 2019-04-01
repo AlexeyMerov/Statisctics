@@ -12,6 +12,7 @@ import androidx.annotation.ColorRes
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import com.alexeymerov.statistics_chart.App.Companion.THEME_SHARED_KEY
 import com.alexeymerov.statistics_chart.chart_view.ChartView
 import com.alexeymerov.statistics_chart.interfaces.UpdatableTheme
 import com.alexeymerov.statistics_chart.utils.ChartDataParser
@@ -25,6 +26,8 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 	private val chartDataParser by lazy { ChartDataParser() }
 	private var themeMenuItem: MenuItem? = null
 	private var isLightThemeEnabled = true
+	private val moonIcon by lazy { ContextCompat.getDrawable(this, R.drawable.ic_moon) }
+	private val sunIcon by lazy { ContextCompat.getDrawable(this, R.drawable.ic_sun) }
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		isLightThemeEnabled = SPHelper.getShared(THEME_SHARED_KEY, true)
@@ -69,22 +72,16 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 		ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 
 	override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-		menuInflater.inflate(R.menu.main_menu, menu)
-		themeMenuItem = menu?.findItem(R.id.action)
-		themeMenuItem?.icon = when {
-			isLightThemeEnabled -> ContextCompat.getDrawable(this, R.drawable.ic_moon)
-			else -> ContextCompat.getDrawable(this, R.drawable.ic_sun)
-		}
+		themeMenuItem = menu?.add(Menu.NONE, 0, Menu.NONE, getString(R.string.switch_themes))
+		themeMenuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+		themeMenuItem?.icon = if (isLightThemeEnabled) moonIcon else sunIcon
 		return super.onCreateOptionsMenu(menu)
 	}
 
 	override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-		if (item?.itemId == R.id.action) {
+		if (item?.itemId == 0) {
 			isLightThemeEnabled = !isLightThemeEnabled
-			themeMenuItem?.icon = when {
-				isLightThemeEnabled -> ContextCompat.getDrawable(this, R.drawable.ic_moon)
-				else -> ContextCompat.getDrawable(this, R.drawable.ic_sun)
-			}
+			themeMenuItem?.icon = if (isLightThemeEnabled) moonIcon else sunIcon
 			SPHelper.setShared(THEME_SHARED_KEY, isLightThemeEnabled)
 			updateTheme(isLightThemeEnabled)
 		}

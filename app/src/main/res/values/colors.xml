@@ -10,7 +10,6 @@
 
     <color name="darkBackground">#1D2733</color>
     <color name="white">#FFFFFF</color>
-    <color name="black">#000000</color>
     <color name="black_30">#45000000</color>
     <color name="black_50">#7E000000</color>
     <color name="grey">#A5A5A5</color>
@@ -18,8 +17,6 @@
     <color name="grey_50">#80A5A5A5</color>
     <color name="light_blue">#73B7EA</color>
     <color name="light_blue_2">#3C98D5</color>
-    <color name="blue">#0077E0</color>
-    <color name="dark_blue_2">#19232E</color>
     <color name="dark_blue_3">#7C041233</color>
     <color name="mid_blue">#752B5D91</color>
     <color name="mid_blue_2">#40515F</color>

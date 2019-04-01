@@ -22,29 +22,27 @@ import java.util.*
 class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : AbstractLineView(context, attrs, defStyleAttr), UpdatableTheme {
 
-	private companion object {
-		const val POPUP_SHADOW_PROPERTY = "popupShadowRectPaint"
-		const val POPUP_PROPERTY = "popupRectPaint"
-		const val SMALL_DOT_PROPERTY = "smallDotPaint"
-		const val TEXT_PROPERTY = "textPaint"
-		const val BOTTOM_TEXT_PROPERTY = "bottomTextPaint"
-		const val BACKGROUND_LINE_PROPERTY = "backgroundLinePaint"
-		const val LINES_PROPERTY = "lines"
+	private val POPUP_SHADOW_PROPERTY = "popupShadowRectPaint"
+	private val POPUP_PROPERTY = "popupRectPaint"
+	private val SMALL_DOT_PROPERTY = "smallDotPaint"
+	private val TEXT_PROPERTY = "textPaint"
+	private val BOTTOM_TEXT_PROPERTY = "bottomTextPaint"
+	private val BACKGROUND_LINE_PROPERTY = "backgroundLinePaint"
+	private val LINES_PROPERTY = "lines"
 
-		val BOTTOM_LABELS_TOP_MARGIN = 5.dpToPx()
-		val LEFT_LABEL_BOTTOM_MARGIN = 3.dpToPx()
-		val HORIZONTAL_MARGIN = 3.dpToPxFloat()
+	private val BOTTOM_LABELS_TOP_MARGIN = 5.dpToPx()
+	private val LEFT_LABEL_BOTTOM_MARGIN = 3.dpToPx()
+	private val HORIZONTAL_MARGIN = 3.dpToPxFloat()
 
-		val DOT_SMALL_RADIUS = 3.dpToPxFloat()
-		val DOT_BIG_RADIUS = 5.dpToPxFloat()
+	private val DOT_SMALL_RADIUS = 3.dpToPxFloat()
+	private val DOT_BIG_RADIUS = 5.dpToPxFloat()
 
-		val POPUP_RADIUS = 6.dpToPxFloat()
-		val POPUP_SHADOW_RADIUS = 7.dpToPxFloat()
-		val MARGIN_8 = 8.dpToPxFloat()
-		val MARGIN_16 = MARGIN_8 * 2f
-		val MARGIN_32 = MARGIN_16 * 2f
-		val SHADOW_SIZE = 1.5f.dpToPxFloat()
-	}
+	private val POPUP_RADIUS = 6.dpToPxFloat()
+	private val POPUP_SHADOW_RADIUS = 7.dpToPxFloat()
+	private val MARGIN_8 = 8.dpToPxFloat()
+	private val MARGIN_16 = MARGIN_8 * 2f
+	private val MARGIN_32 = MARGIN_16 * 2f
+	private val SHADOW_SIZE = 1.5f.dpToPxFloat()
 
 	private var needUpdatePreview = true
 
@@ -126,21 +124,38 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 		if (needAnimateValues) return valueAnimator.getAnimatedValue(LINES_PROPERTY) as Int
 
 		vertical = MIN_VERTICAL_GRID_NUM
-		chartLines
-			.takeIf { !it.isEmpty() }
-			?.asSequence()
-			?.filter { it.isEnabled }
-			?.map {
-				var startIndex = startIndex
-				var toIndex = startIndex + xValuesToDisplay
-				if (toIndex >= it.dataValues.size) toIndex = it.dataValues.size - 1
-				if (startIndex >= toIndex) startIndex = toIndex - xValuesToDisplay
-				if (startIndex < 0) startIndex = 0
-				it.dataValues.subList(startIndex, toIndex)
-			}
-			?.map { Collections.max(it) }
-			?.filter { vertical < it }
-			?.forEach { vertical = it }
+//		chartLines
+//			.takeIf { !it.isEmpty() }
+//			?.asSequence()
+//			?.filter { it.isEnabled }
+//			?.map {
+//				var startIndex = startIndex
+//				var toIndex = startIndex + xValuesToDisplay
+//				if (toIndex >= it.dataValues.size) toIndex = it.dataValues.size - 1
+//				if (startIndex >= toIndex) startIndex = toIndex - xValuesToDisplay
+//				if (startIndex < 0) startIndex = 0
+//				it.dataValues.subList(startIndex, toIndex)
+//			}
+//			?.map { Collections.max(it) }
+//			?.filter { vertical < it }
+//			?.forEach { vertical = it }
+
+		for (chartLine in chartLines) {
+			if (!chartLine.isEnabled) continue
+
+			val dataValues = chartLine.dataValues
+
+			var startIndex = startIndex
+			var toIndex = startIndex + xValuesToDisplay
+			if (toIndex >= dataValues.size) toIndex = dataValues.size - 1
+
+			if (startIndex < 0) startIndex = 0
+			else if (startIndex >= toIndex) startIndex = toIndex - xValuesToDisplay
+
+			val subList = dataValues.subList(startIndex, toIndex)
+			val maxValue = Collections.max(subList)
+			if (vertical < maxValue) vertical = maxValue
+		}
 
 		return vertical
 	}
