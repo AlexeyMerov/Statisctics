@@ -13,7 +13,7 @@ import com.alexeymerov.statistics_chart.App.Companion.MARGIN_2
 import com.alexeymerov.statistics_chart.App.Companion.MARGIN_6
 import com.alexeymerov.statistics_chart.App.Companion.MARGIN_8
 import com.alexeymerov.statistics_chart.R
-import com.alexeymerov.statistics_chart.model.Popup
+import com.alexeymerov.statistics_chart.model.PopupData
 import com.alexeymerov.statistics_chart.utils.dpToPxFloat
 import com.alexeymerov.statistics_chart.utils.formatK
 import com.alexeymerov.statistics_chart.utils.formatM
@@ -60,7 +60,7 @@ class PopupHandler(private val lineView: LineView) {
 		updateShadow(this)
 	}
 
-	private val popupList = mutableListOf<Popup>()
+	private val popupList = mutableListOf<PopupData>()
 
 	fun drawPopup(canvas: Canvas) {
 		if (popupList.isEmpty()) return
@@ -182,7 +182,7 @@ class PopupHandler(private val lineView: LineView) {
 		popupTextPaint.getTextBounds(valueString, 0, valueString.length, rectText)
 	}
 
-	private fun getValueString(popup: Popup): String {
+	private fun getValueString(popup: PopupData): String {
 		val value = popup.value
 		return when {
 			value > 1000000 -> value.formatM()
@@ -193,7 +193,7 @@ class PopupHandler(private val lineView: LineView) {
 
 	fun reset() = popupList.clear()
 
-	fun addPopup(popup: Popup) {
+	fun addPopup(popup: PopupData) {
 		popupList.add(popup)
 	}
 

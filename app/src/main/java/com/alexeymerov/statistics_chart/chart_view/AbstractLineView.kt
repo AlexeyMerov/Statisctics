@@ -1,6 +1,7 @@
 package com.alexeymerov.statistics_chart.chart_view
 
 import android.animation.Animator
+import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Canvas
@@ -17,7 +18,9 @@ abstract class AbstractLineView @JvmOverloads constructor(context: Context, attr
 														  defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
 
-	protected val MIN_VERTICAL_GRID_NUM = 4
+	private val LINES_PROPERTY_NAME = "lines"
+
+	protected val MIN_VERTICAL_GRID_NUM = 4f
 
 	protected var xValuesToDisplay = 24
 		get() {
@@ -25,16 +28,12 @@ abstract class AbstractLineView @JvmOverloads constructor(context: Context, attr
 			return field
 		}
 	protected var startIndex = 0
-
-	protected var vertical = 0
-
+	protected var verticalMaxValue = 0f
+	protected var stepX = 0f
 	protected var chartLines = listOf<ChartLine>()
-
-	protected val linePath = Path()
-
 	protected var needAnimateValues = false
 
-	protected var stepX = 0f
+	protected val linePath = Path()
 
 	protected open val linePaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
 		style = Paint.Style.STROKE
@@ -43,7 +42,14 @@ abstract class AbstractLineView @JvmOverloads constructor(context: Context, attr
 		strokeJoin = Paint.Join.ROUND
 	}
 
-	protected val valueAnimator = ValueAnimator().apply {
+	protected var bottomLabelsList = listOf<DateItem>()
+
+	internal fun getVerticalMaxValue(): Float {
+		if (needAnimateValues) return valueAnimator.getAnimatedValue(LINES_PROPERTY_NAME) as Float
+		return verticalMaxValue
+	}
+
+	private val valueAnimator = ValueAnimator().apply {
 		duration = 500
 		interpolator = AccelerateDecelerateInterpolator()
 		repeatMode = ValueAnimator.RESTART
@@ -63,17 +69,17 @@ abstract class AbstractLineView @JvmOverloads constructor(context: Context, attr
 		})
 	}
 
-	protected var bottomLabelsList = listOf<DateItem>()
+	protected fun callAnimation(oldMaxValue: Float, newMaxValue: Float) {
+		valueAnimator.setValues(PropertyValuesHolder.ofFloat(LINES_PROPERTY_NAME, oldMaxValue, newMaxValue))
+		valueAnimator.start()
+	}
 
 	protected abstract fun drawLines(canvas: Canvas)
-
-	internal abstract fun getVerticalMaxValue(): Int
-
-	protected fun resetVerticalMaxNum() {
-		vertical = 0
-	}
 
 	abstract fun setData(newLines: List<ChartLine>, labelsList: List<DateItem>)
 
 	abstract fun toggleLine(lineIndex: Int)
+
+	abstract fun updateVerticalMaxValue()
+
 }

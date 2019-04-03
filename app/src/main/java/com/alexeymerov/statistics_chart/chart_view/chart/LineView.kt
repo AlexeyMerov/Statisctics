@@ -22,9 +22,8 @@ import com.alexeymerov.statistics_chart.chart_view.AbstractLineView
 import com.alexeymerov.statistics_chart.interfaces.UpdatableTheme
 import com.alexeymerov.statistics_chart.model.ChartLine
 import com.alexeymerov.statistics_chart.model.DateItem
-import com.alexeymerov.statistics_chart.model.Popup
+import com.alexeymerov.statistics_chart.model.PopupData
 import com.alexeymerov.statistics_chart.utils.SPHelper
-import com.alexeymerov.statistics_chart.utils.dpToPx
 import com.alexeymerov.statistics_chart.utils.dpToPxFloat
 import com.alexeymerov.statistics_chart.utils.formatK
 import com.alexeymerov.statistics_chart.utils.formatM
@@ -41,27 +40,26 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 	private val POPUP_SHADOW_PROPERTY = "popupShadowRectPaint"
 	private val POPUP_PROPERTY = "popupRectPaint"
 	private val SMALL_DOT_PROPERTY = "smallDotPaint"
-	private val TEXT_PROPERTY = "textPaint"
+	private val TEXT_PROPERTY = "labelTextPaint"
 	private val BACKGROUND_LINE_PROPERTY = "backgroundLinePaint"
-	private val LINES_PROPERTY = "lines"
 
 	private val BOTTOM_LABELS_TOP_MARGIN = MARGIN_6
 	private val LEFT_LABEL_BOTTOM_MARGIN = MARGIN_4
+	private val BOTTOM_LABEL_MIN_GAP = 10.dpToPxFloat()
 
 	private var needUpdatePreview = true
 
 	private val leftLabelsList = mutableListOf<String>()
-
 	private var leftLabelsModule = 0
-	private var bottomTextHeight = 0
-	private var bottomTextDescent = 0
 
-	private var leftPadding = 45.dpToPx() / 3 * 2
-	private var longestWidth = 0
+	private var bottomTextHeight = 0f
+	private var bottomTextWidth = 0f
 
 	private val bottomTextRect = Rect()
+	private var widthFloat = 0f
+	private var heightFloat = 0f
 
-	private val textPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+	private val labelTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
 		updatePaint(context, this, R.color.labels_text_light, R.color.labels_text_dark)
 		textSize = 12.spToPxFloat()
 		textAlign = Paint.Align.LEFT
@@ -82,7 +80,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 			popupHandler.updateShadowColor(animator.getAnimatedValue(POPUP_SHADOW_PROPERTY) as Int)
 			popupHandler.updateRectColor(animator.getAnimatedValue(POPUP_PROPERTY) as Int)
 			popupHandler.updateSmallDotColor(animator.getAnimatedValue(SMALL_DOT_PROPERTY) as Int)
-			textPaint.color = animator.getAnimatedValue(TEXT_PROPERTY) as Int
+			labelTextPaint.color = animator.getAnimatedValue(TEXT_PROPERTY) as Int
 			backgroundLinePaint.color = animator.getAnimatedValue(BACKGROUND_LINE_PROPERTY) as Int
 			postInvalidate()
 		}
@@ -90,28 +88,23 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	var onDataLoaded: () -> Unit = {}
 
-	override fun getVerticalMaxValue(): Int {
-		if (needAnimateValues) return valueAnimator.getAnimatedValue(LINES_PROPERTY) as Int
-
-		vertical = MIN_VERTICAL_GRID_NUM
+	override fun updateVerticalMaxValue() {
+		verticalMaxValue = MIN_VERTICAL_GRID_NUM
 		for (chartLine in chartLines) {
 			if (!chartLine.isEnabled) continue
-
 			val dataValues = chartLine.dataValues
 
-			var startIndex = startIndex
+			var startIndex = if (startIndex < 0) 0 else startIndex
+
 			var toIndex = startIndex + xValuesToDisplay
 			if (toIndex >= dataValues.size) toIndex = dataValues.size - 1
 
-			if (startIndex < 0) startIndex = 0
-			else if (startIndex >= toIndex) startIndex = toIndex - xValuesToDisplay
+			if (startIndex >= toIndex) startIndex = toIndex - xValuesToDisplay
 
 			val subList = dataValues.subList(startIndex, toIndex)
-			val maxValue = Collections.max(subList)
-			if (vertical < maxValue) vertical = maxValue
+			val maxValue = Collections.max(subList).toFloat()
+			if (verticalMaxValue < maxValue) verticalMaxValue = maxValue
 		}
-
-		return vertical
 	}
 
 	/**
@@ -120,9 +113,9 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	override fun setData(newLines: List<ChartLine>, labelsList: List<DateItem>) {
 		needUpdatePreview = true
-		bottomLabelsList = labelsList
-		setBottomTextList()
+		setBottomTextList(labelsList)
 		chartLines = newLines
+		updateVerticalMaxValue()
 		updateLeftLabelsList()
 		postInvalidate()
 	}
@@ -130,7 +123,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 	private fun updateLeftLabelsList() {
 		leftLabelsList.clear()
 
-		val verticalGridNum = getVerticalMaxValue()
+		val verticalGridNum = getVerticalMaxValue().toInt()
 
 		leftLabelsModule = 1
 		if (verticalGridNum >= 10) leftLabelsModule = (verticalGridNum / 10) * 2
@@ -143,23 +136,23 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 		}
 	}
 
-	private fun setBottomTextList() {
-		longestWidth = 0
-		bottomTextDescent = 0
+	private fun setBottomTextList(labelsList: List<DateItem>) {
+		bottomLabelsList = labelsList
+		bottomTextWidth = 0f
+
+		val firstItem = bottomLabelsList[0].shortDate
+		labelTextPaint.getTextBounds(firstItem, 0, firstItem.length, bottomTextRect)
+
+		val height = bottomTextRect.height().toFloat()
+		if (bottomTextHeight < height) bottomTextHeight = height
 
 		for (s in bottomLabelsList) {
-			textPaint.getTextBounds(s.shortDate, 0, s.shortDate.length, bottomTextRect)
-			val height = bottomTextRect.height()
-			if (bottomTextHeight < height) bottomTextHeight = height
+			val shortDate = s.shortDate
+			labelTextPaint.getTextBounds(shortDate, 0, shortDate.length, bottomTextRect)
 
-			val width = bottomTextRect.width()
-			if (longestWidth < width) longestWidth = width
-
-			val abs = Math.abs(bottomTextRect.bottom)
-			if (bottomTextDescent < abs) bottomTextDescent = abs
+			val width = bottomTextRect.width().toFloat()
+			if (bottomTextWidth < width) bottomTextWidth = width
 		}
-
-		if (leftPadding < longestWidth / 2) leftPadding = longestWidth / 2
 	}
 
 	/**
@@ -197,36 +190,35 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	private fun drawLeftLabelsWithLines(canvas: Canvas) {
 		val currentMaxValue = getVerticalMaxValue()
-		val yStep = getHeightWithMargins() / currentMaxValue.toFloat()
-		val stopX = width.toFloat()
+		val currentMaxValueInt = currentMaxValue.toInt()
+		val yStep = getHeightWithMargins() / currentMaxValue
 
-		for (i in 0 until currentMaxValue step leftLabelsModule) {
+		for (i in 0 until currentMaxValueInt step leftLabelsModule) {
 			val yAxisValue = (i * yStep)
-			val value = currentMaxValue - i
+			val value = currentMaxValueInt - i
 			val valueString = when {
 				value > 1000000 -> value.formatM()
 				value > 1000 -> value.formatK()
 				else -> value.toString()
 			}
 
-			canvas.drawLine(0f, yAxisValue, stopX, yAxisValue, backgroundLinePaint)
-			canvas.drawText(valueString, 0f, yAxisValue - LEFT_LABEL_BOTTOM_MARGIN, textPaint)
+			canvas.drawLine(0f, yAxisValue, widthFloat, yAxisValue, backgroundLinePaint)
+			canvas.drawText(valueString, 0f, yAxisValue - LEFT_LABEL_BOTTOM_MARGIN, labelTextPaint)
 		}
 	}
 
-	internal fun getHeightWithMargins() =
-		height.toFloat() - bottomTextHeight - bottomTextDescent - BOTTOM_LABELS_TOP_MARGIN
+	internal fun getHeightWithMargins() = heightFloat - bottomTextHeight - BOTTOM_LABELS_TOP_MARGIN
 
 	private fun drawBottomLabels(canvas: Canvas) {
 		var lastX = 0f
-		val y = (height - bottomTextDescent).toFloat()
+		val y = heightFloat - bottomTextHeight
 
 		for (index in 0 until bottomLabelsList.size) {
 			val x = (index - startIndex) * stepX
-			if (lastX != 0f && x - lastX < 10.dpToPxFloat()) continue
+			if (lastX != 0f && x - lastX < BOTTOM_LABEL_MIN_GAP) continue
 			val date = bottomLabelsList[index]
-			canvas.drawText(date.shortDate, x, y, textPaint)
-			lastX = x + longestWidth
+			canvas.drawText(date.shortDate, x, y, labelTextPaint)
+			lastX = x + bottomTextWidth
 		}
 	}
 
@@ -239,7 +231,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 		val line = chartLines[lineIndex]
 		line.isEnabled = !line.isEnabled
-		resetVerticalMaxNum()
+		updateVerticalMaxValue()
 		updateLeftLabelsList()
 
 		val newMaxValue = getVerticalMaxValue()
@@ -248,10 +240,12 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
 		super.onLayout(changed, left, top, right, bottom)
-		val widthFloat = width.toFloat()
+		widthFloat = width.toFloat()
+		heightFloat = height.toFloat()
 		stepX = (widthFloat / bottomLabelsList.size.toFloat()) * 4
 		xValuesToDisplay = (widthFloat / stepX).toInt() + 1
 		startIndex = bottomLabelsList.size - xValuesToDisplay
+		updateVerticalMaxValue()
 
 		if (needUpdatePreview) {
 			onDataLoaded()
@@ -261,17 +255,12 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	fun update(newStart: Float, newLength: Float) {
 		popupHandler.reset()
-		val widthFloat = width.toFloat()
 		val ratio = widthFloat / newLength
 		stepX = (widthFloat / bottomLabelsList.size.toFloat()) * ratio
 		xValuesToDisplay = (widthFloat / stepX).toInt() + 1
 		startIndex = ((newStart / stepX) * ratio).toInt()
+		updateVerticalMaxValue()
 		postInvalidate()
-	}
-
-	private fun callAnimation(oldMaxValue: Int, newMaxValue: Int) {
-		valueAnimator.setValues(PropertyValuesHolder.ofInt(LINES_PROPERTY, oldMaxValue, newMaxValue))
-		valueAnimator.start()
 	}
 
 	override fun updateTheme(lightThemeEnabled: Boolean) {
@@ -292,8 +281,13 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 		val colorLight = ContextCompat.getColor(context, lightColor)
 		val colorDark = ContextCompat.getColor(context, darkColor)
 
-		val colorFrom = if (isLightThemeEnabled) colorDark else colorLight
-		val colorTo = if (isLightThemeEnabled) colorLight else colorDark
+		var colorFrom = colorLight
+		var colorTo = colorDark
+
+		if (isLightThemeEnabled) {
+			colorFrom = colorDark
+			colorTo = colorLight
+		}
 
 		return PropertyValuesHolder.ofObject(propertyName, ArgbEvaluator(), colorFrom, colorTo)
 	}
@@ -316,10 +310,11 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 		if (chartLines.isEmpty()) return
 		popupHandler.reset()
 
-		var resultX = x
-
-		if (resultX < MARGIN_8) resultX = MARGIN_8
-		else if (resultX > width.toFloat() - MARGIN_8) resultX = width.toFloat() - MARGIN_8
+		var resultX = when {
+			x < MARGIN_8 -> MARGIN_8
+			x > widthFloat - MARGIN_8 -> widthFloat - MARGIN_8
+			else -> x
+		}
 
 		val position = startIndex + (resultX / stepX).toInt()
 		if (position < 0 || position >= bottomLabelsList.size) return
@@ -328,7 +323,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 			if (!line.isEnabled) continue
 			val dotValue = line.dataValues[position]
 			resultX = (position - startIndex) * stepX
-			popupHandler.addPopup(Popup(bottomLabelsList[position], line, dotValue, resultX, line.color))
+			popupHandler.addPopup(PopupData(bottomLabelsList[position], line, dotValue, resultX, line.color))
 			postInvalidate()
 		}
 	}

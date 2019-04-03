@@ -1,6 +1,5 @@
 package com.alexeymerov.statistics_chart.chart_view.preview_view
 
-import android.animation.PropertyValuesHolder
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
@@ -15,7 +14,6 @@ import java.util.Collections
 class PreviewLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : AbstractLineView(context, attrs, defStyleAttr) {
 
-	private val LINES_PROPERTY_NAME = "lines"
 	override val linePaint: Paint = super.linePaint.apply { strokeWidth = 1.2f.dpToPxFloat() }
 	/**
 	 * Set new data block
@@ -24,22 +22,17 @@ class PreviewLineView @JvmOverloads constructor(context: Context, attrs: Attribu
 	override fun setData(newLines: List<ChartLine>, labelsList: List<DateItem>) {
 		bottomLabelsList = labelsList
 		chartLines = newLines
+		updateVerticalMaxValue()
 		postInvalidate()
 	}
 
-	override fun getVerticalMaxValue(): Int {
-		if (needAnimateValues) return valueAnimator.getAnimatedValue(LINES_PROPERTY_NAME) as Int
-
-		if (vertical == 0) {
-			vertical = MIN_VERTICAL_GRID_NUM
-			for (chartLine in chartLines) {
-				if (!chartLine.isEnabled) continue
-				val maxValue = Collections.max(chartLine.dataValues)
-				if (vertical < maxValue) vertical = maxValue
-			}
+	override fun updateVerticalMaxValue() {
+		verticalMaxValue = MIN_VERTICAL_GRID_NUM
+		for (chartLine in chartLines) {
+			if (!chartLine.isEnabled) continue
+			val maxValue = Collections.max(chartLine.dataValues).toFloat()
+			if (verticalMaxValue < maxValue) verticalMaxValue = maxValue
 		}
-
-		return vertical
 	}
 
 	override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -60,7 +53,7 @@ class PreviewLineView @JvmOverloads constructor(context: Context, attrs: Attribu
 	override fun onDraw(canvas: Canvas) = drawLines(canvas)
 
 	override fun drawLines(canvas: Canvas) {
-		val yStep = height.toFloat() / getVerticalMaxValue().toFloat()
+		val yStep = height.toFloat() / getVerticalMaxValue()
 
 		for (chartLineEntry in chartLines) {
 			val dataValues = chartLineEntry.dataValues
@@ -80,14 +73,9 @@ class PreviewLineView @JvmOverloads constructor(context: Context, attrs: Attribu
 	}
 
 	override fun toggleLine(lineIndex: Int) {
-		val oldMaxValue = vertical
-		resetVerticalMaxNum()
+		val oldMaxValue = getVerticalMaxValue()
+		updateVerticalMaxValue()
 		val newMaxValue = getVerticalMaxValue()
 		callAnimation(oldMaxValue, newMaxValue)
-	}
-
-	private fun callAnimation(oldMaxValue: Int, newMaxValue: Int) {
-		valueAnimator.setValues(PropertyValuesHolder.ofInt(LINES_PROPERTY_NAME, oldMaxValue, newMaxValue))
-		valueAnimator.start()
 	}
 }
