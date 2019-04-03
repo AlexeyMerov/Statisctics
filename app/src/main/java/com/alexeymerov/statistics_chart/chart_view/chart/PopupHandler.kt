@@ -80,7 +80,7 @@ class PopupHandler(private val lineView: LineView) {
 			if (popup.line.name.length > longestWord.length) longestWord = popup.line.name
 			if (valueString.length > longestWord.length) longestWord = valueString
 
-			val y = heightWithMargins - (value.toFloat() * yStep)
+			val y = heightWithMargins - (value.toFloat() * yStep) + lineView.TOP_MARGIN
 			bigDotPaint.color = popup.color
 			canvas.drawCircle(initialX, y, DOT_BIG_RADIUS, bigDotPaint)
 			canvas.drawCircle(initialX, y, DOT_SMALL_RADIUS, smallDotPaint)

@@ -46,6 +46,8 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 	private val BOTTOM_LABELS_TOP_MARGIN = MARGIN_6
 	private val LEFT_LABEL_BOTTOM_MARGIN = MARGIN_4
 	private val BOTTOM_LABEL_MIN_GAP = 10.dpToPxFloat()
+	internal val TOP_MARGIN = 24.dpToPxFloat()
+
 
 	private var needUpdatePreview = true
 
@@ -168,7 +170,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	override fun drawLines(canvas: Canvas) {
 		val heightFloat = getHeightWithMargins()
-		val yStep = heightFloat / getVerticalMaxValue().toFloat()
+		val yStep = heightFloat / getVerticalMaxValue()
 
 		for (chartLineEntry in chartLines) {
 			if (!chartLineEntry.isEnabled) continue
@@ -176,7 +178,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 			for (xIndex in 0 until xValuesToDisplay) {
 				val dataIndex = xIndex + startIndex
 				if (dataIndex >= dataValues.size) continue
-				val yAxis = heightFloat - (dataValues[dataIndex].toFloat() * yStep)
+				val yAxis = heightFloat - (dataValues[dataIndex].toFloat() * yStep) + TOP_MARGIN
 				when (xIndex) {
 					0 -> linePath.moveTo(0f, yAxis)
 					else -> linePath.lineTo(xIndex * stepX, yAxis)
@@ -194,7 +196,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 		val yStep = getHeightWithMargins() / currentMaxValue
 
 		for (i in 0 until currentMaxValueInt step leftLabelsModule) {
-			val yAxisValue = (i * yStep)
+			val yAxisValue = (i * yStep) + TOP_MARGIN
 			val value = currentMaxValueInt - i
 			val valueString = when {
 				value > 1000000 -> value.formatM()
@@ -211,7 +213,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	private fun drawBottomLabels(canvas: Canvas) {
 		var lastX = 0f
-		val y = heightFloat - bottomTextHeight
+		val y = heightFloat - bottomTextHeight + TOP_MARGIN
 
 		for (index in 0 until bottomLabelsList.size) {
 			val x = (index - startIndex) * stepX
