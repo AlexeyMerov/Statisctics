@@ -327,6 +327,7 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 		for (line in chartLines) {
 			if (!line.isEnabled) continue
 			val dotValue = line.dataValues[position]
+			resultX = (position - startIndex) * stepX
 			popupHandler.addPopup(Popup(bottomLabelsList[position], line, dotValue, resultX, line.color))
 			postInvalidate()
 		}
