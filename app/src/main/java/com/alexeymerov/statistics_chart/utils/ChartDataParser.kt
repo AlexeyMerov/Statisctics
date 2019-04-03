@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import androidx.annotation.RawRes
 import com.alexeymerov.statistics_chart.model.ChartLine
+import com.alexeymerov.statistics_chart.model.DateItem
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
@@ -20,15 +21,15 @@ class ChartDataParser {
 
 	private companion object {
 		const val DATE_PATTERN = "MMM dd"
+		const val DATE_PATTERN_FULL = "EEE, MMM dd"
 	}
 
 	private val simpleDateFormat = SimpleDateFormat(DATE_PATTERN, Locale.getDefault())
 
 	fun parseJsonRawRes(context: Context, @RawRes resId: Int,
-						onParseComplete: (List<Pair<List<ChartLine>, List<String>>>) -> Unit
+						onParseComplete: (List<Pair<List<ChartLine>, List<DateItem>>>) -> Unit
 	) {
-		val allCharts = mutableListOf<Pair<List<ChartLine>, List<String>>>()
-
+		val allCharts = mutableListOf<Pair<List<ChartLine>, List<DateItem>>>()
 		var jsonReader: BufferedReader? = null
 
 		try {
@@ -56,12 +57,12 @@ class ChartDataParser {
 		onParseComplete(allCharts)
 	}
 
-	private fun parseJson(chart: JSONObject): Pair<List<ChartLine>, List<String>> {
+	private fun parseJson(chart: JSONObject): Pair<List<ChartLine>, List<DateItem>> {
 		val columns = chart.getJSONArray("columns")
 		val names = chart.getJSONObject("names")
 		val colors = chart.getJSONObject("colors")
 		val chartLines = ArrayList<ChartLine>(colors.length())
-		val labelsList = mutableListOf<String>()
+		val labelsList = mutableListOf<DateItem>()
 
 		for (columnIndex in 0 until columns.length()) {
 			when (columnIndex) {
@@ -69,7 +70,15 @@ class ChartDataParser {
 					val xValues = columns.getJSONArray(columnIndex)
 					for (xValueIndex in 1 until xValues.length()) {
 						val dateLong = xValues.get(xValueIndex) as Long
-						labelsList.add(simpleDateFormat.format(Date(dateLong)))
+
+						simpleDateFormat.applyPattern(DATE_PATTERN)
+						val date = Date(dateLong)
+						val shortDate = simpleDateFormat.format(date)
+
+						simpleDateFormat.applyPattern(DATE_PATTERN_FULL)
+						val longDate = simpleDateFormat.format(date)
+
+						labelsList.add(DateItem(shortDate, longDate))
 					}
 				}
 				else -> {

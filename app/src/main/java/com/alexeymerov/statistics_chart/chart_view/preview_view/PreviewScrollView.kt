@@ -7,11 +7,11 @@ import android.view.ViewGroup
 import android.view.ViewGroup.LayoutParams.MATCH_PARENT
 import android.widget.FrameLayout
 import com.alexeymerov.statistics_chart.interfaces.PreviewScrollListener
-import com.alexeymerov.statistics_chart.interfaces.UpdatableTheme
 import com.alexeymerov.statistics_chart.model.ChartLine
+import com.alexeymerov.statistics_chart.model.DateItem
 
 class PreviewScrollView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
-) : FrameLayout(context, attrs, defStyleAttr), UpdatableTheme {
+) : FrameLayout(context, attrs, defStyleAttr) {
 
 	private var previewLineView: PreviewLineView
 	private var selectorView: SelectorView
@@ -37,12 +37,11 @@ class PreviewScrollView @JvmOverloads constructor(context: Context, attrs: Attri
 
 	fun setPreviewSize(newSize: Float) = selectorView.setPreviewSize(newSize)
 
-	fun setData(chartLines: List<ChartLine>, labelsList: List<String>) = previewLineView.setData(chartLines, labelsList)
+	fun setData(chartLines: List<ChartLine>, labelsList: List<DateItem>) =
+		previewLineView.setData(chartLines, labelsList)
 
 	fun toggleLine(index: Int) = previewLineView.toggleLine(index)
 
-	override fun updateTheme(lightThemeEnabled: Boolean) {
-		selectorView.updateTheme(lightThemeEnabled)
-	}
+	fun updateTheme(lightThemeEnabled: Boolean) = selectorView.updateTheme(lightThemeEnabled)
 
 }

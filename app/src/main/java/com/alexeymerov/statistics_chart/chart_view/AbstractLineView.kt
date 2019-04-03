@@ -9,16 +9,13 @@ import android.graphics.Path
 import android.util.AttributeSet
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
-import com.alexeymerov.statistics_chart.App
 import com.alexeymerov.statistics_chart.model.ChartLine
-import com.alexeymerov.statistics_chart.utils.SPHelper
+import com.alexeymerov.statistics_chart.model.DateItem
 import com.alexeymerov.statistics_chart.utils.dpToPxFloat
 
 abstract class AbstractLineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null,
 														  defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
-
-	protected var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
 
 	protected val MIN_VERTICAL_GRID_NUM = 4
 
@@ -39,7 +36,7 @@ abstract class AbstractLineView @JvmOverloads constructor(context: Context, attr
 
 	protected var stepX = 0f
 
-	protected val linePaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+	protected open val linePaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
 		style = Paint.Style.STROKE
 		strokeWidth = 2.dpToPxFloat()
 		strokeCap = Paint.Cap.ROUND
@@ -66,17 +63,17 @@ abstract class AbstractLineView @JvmOverloads constructor(context: Context, attr
 		})
 	}
 
-	protected abstract var bottomLabelsList: List<String>
+	protected var bottomLabelsList = listOf<DateItem>()
 
 	protected abstract fun drawLines(canvas: Canvas)
 
-	protected abstract fun getVerticalMaxValue(): Int
+	internal abstract fun getVerticalMaxValue(): Int
 
 	protected fun resetVerticalMaxNum() {
 		vertical = 0
 	}
 
-	abstract fun setData(newLines: List<ChartLine>, labelsList: List<String>)
+	abstract fun setData(newLines: List<ChartLine>, labelsList: List<DateItem>)
 
 	abstract fun toggleLine(lineIndex: Int)
 }

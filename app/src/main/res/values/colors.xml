@@ -10,15 +10,21 @@
 
     <color name="darkBackground">#1D2733</color>
     <color name="white">#FFFFFF</color>
-    <color name="black_30">#45000000</color>
     <color name="black_50">#7E000000</color>
-    <color name="grey">#A5A5A5</color>
-    <color name="grey_30">#40A5A5A5</color>
     <color name="grey_50">#80A5A5A5</color>
-    <color name="light_blue">#73B7EA</color>
-    <color name="light_blue_2">#3C98D5</color>
-    <color name="dark_blue_3">#7C041233</color>
-    <color name="mid_blue">#752B5D91</color>
-    <color name="mid_blue_2">#40515F</color>
+
+    <color name="labels_text_light">#9DA4AC</color>
+    <color name="labels_text_dark">#5B6F81</color>
+
+    <color name="lines_light">#D3DBE7</color>
+    <color name="lines_dark">#131c26</color>
+
+    <color name="preview_inactive_light">#B3F5F5F5</color>
+    <color name="preview_inactive_dark">#B3141C32</color>
+    <color name="preview_bounds_light">#80C8D8E4</color>
+    <color name="preview_bounds_dark">#803E5D79</color>
+
+    <color name="light_blue">#85d5ff</color>
+    <color name="light_blue_2">#218acf</color>
 
 </resources>

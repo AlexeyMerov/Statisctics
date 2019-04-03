@@ -5,4 +5,6 @@ data class ChartLine(var number: Int,
 					 var dataValues: List<Int>, var name: String, var color: Int
 )
 
-data class Popup(val dateString: String, val line: ChartLine, val value: Int, val x: Float, val color: Int)
+data class Popup(val date: DateItem, val line: ChartLine, val value: Int, val x: Float, val color: Int)
+
+data class DateItem(val shortDate: String, val fullDate: String)

@@ -23,16 +23,17 @@ import com.alexeymerov.statistics_chart.chart_view.preview_view.PreviewScrollVie
 import com.alexeymerov.statistics_chart.interfaces.PreviewScrollListener
 import com.alexeymerov.statistics_chart.interfaces.UpdatableTheme
 import com.alexeymerov.statistics_chart.model.ChartLine
+import com.alexeymerov.statistics_chart.model.DateItem
 import com.alexeymerov.statistics_chart.utils.SPHelper
 import com.alexeymerov.statistics_chart.utils.dpToPx
 
 class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : LinearLayout(context, attrs, defStyleAttr), PreviewScrollListener, UpdatableTheme {
 
-	private var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
+	override var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
 
-	private val MARGIN_8 = 8.dpToPx()
-	private val MARGIN_16 = 16.dpToPx()
+	private val MARGIN_8 = App.MARGIN_8.toInt()
+	private val MARGIN_16 = App.MARGIN_16.toInt()
 
 	private val COLOR_PROPERTY = "color"
 
@@ -41,10 +42,9 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 	private val previewScrollBar: PreviewScrollView
 	private val lineNamesList: LinearLayout
 
-	private val totalHeight = 350.dpToPx()
-	private val onePartHeight = (totalHeight / 5)
-	private val chartHeight = onePartHeight * 4
-	private val scrollBarHeight = totalHeight / 6
+	private val chartHeight = 320.dpToPx()
+	private val scrollBarHeight = 40.dpToPx()
+	private val scaleFactor = 4f
 
 	private lateinit var colorAnimation: ValueAnimator
 
@@ -88,7 +88,7 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 
 	private fun createLineView() = LineView(context).apply {
 		layoutParams = LayoutParams(MATCH_PARENT, chartHeight)
-		onDataLoaded = { previewScrollBar.setPreviewSize(lineView.width.toFloat() / 4f) }
+		onDataLoaded = { previewScrollBar.setPreviewSize(lineView.width.toFloat() / scaleFactor) }
 	}
 
 	private fun createPreviewLineView() = PreviewScrollView(context).apply {
@@ -107,7 +107,7 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 		setBackgroundColor(ContextCompat.getColor(context, color))
 	}
 
-	fun setDataList(chartLines: List<ChartLine>, labelsList: List<String>) {
+	fun setDataList(chartLines: List<ChartLine>, labelsList: List<DateItem>) {
 		lineView.setData(chartLines, labelsList)
 		previewScrollBar.setData(chartLines, labelsList)
 

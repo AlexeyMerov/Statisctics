@@ -27,7 +27,7 @@ import com.alexeymerov.statistics_chart.utils.dpToPxFloat
 class SelectorView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr), UpdatableTheme {
 
-	private var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
+	override var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
 
 	private val IN_ACTIVE_PROPERTY = "inActivePaint"
 	private val BOUNDS_PROPERTY = "boundsPaint"
@@ -44,7 +44,7 @@ class SelectorView @JvmOverloads constructor(context: Context, attrs: AttributeS
 	private val movableRectRight = RectF()
 
 	private val verticalPadding = 2.dpToPxFloat()
-	private val horizontalPadding = 8.dpToPxFloat()
+	private val horizontalPadding = 5.dpToPxFloat()
 
 	private val defaultPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
 		style = Paint.Style.FILL
@@ -52,10 +52,10 @@ class SelectorView @JvmOverloads constructor(context: Context, attrs: AttributeS
 	}
 	private val activePaint = Paint(defaultPaint).apply { color = Color.TRANSPARENT }
 	private val inActivePaint = Paint(defaultPaint).apply {
-		updatePaint(this, R.color.grey_30, R.color.dark_blue_3)
+		updatePaint(context, this, R.color.preview_inactive_light, R.color.preview_inactive_dark)
 	}
 	private val boundsPaint = Paint(defaultPaint).apply {
-		updatePaint(this, R.color.grey_50, R.color.mid_blue)
+		updatePaint(context, this, R.color.preview_bounds_light, R.color.preview_bounds_dark)
 	}
 
 	private var mViewHeight = 0f
@@ -63,8 +63,8 @@ class SelectorView @JvmOverloads constructor(context: Context, attrs: AttributeS
 
 	private var startX = 0f
 	private var endX = 0f
-	private var initialSize = 50.dpToPxFloat()
-	private var previewWidth = initialSize
+	private var minSize = 25.dpToPxFloat()
+	private var previewWidth = 25.dpToPxFloat()
 
 	private var scrollListener: PreviewScrollListener? = null
 
@@ -90,8 +90,9 @@ class SelectorView @JvmOverloads constructor(context: Context, attrs: AttributeS
 	override fun updateTheme(lightThemeEnabled: Boolean) {
 		isLightThemeEnabled = lightThemeEnabled
 
-		val inActiveProperty = prepareProperty(IN_ACTIVE_PROPERTY, R.color.grey_30, R.color.dark_blue_3)
-		val boundsProperty = prepareProperty(BOUNDS_PROPERTY, R.color.grey_50, R.color.mid_blue)
+		val inActiveProperty =
+			prepareProperty(IN_ACTIVE_PROPERTY, R.color.preview_inactive_light, R.color.preview_inactive_dark)
+		val boundsProperty = prepareProperty(BOUNDS_PROPERTY, R.color.preview_bounds_light, R.color.preview_bounds_dark)
 
 		colorAnimation.setValues(inActiveProperty, boundsProperty)
 		colorAnimation.start()
@@ -108,17 +109,11 @@ class SelectorView @JvmOverloads constructor(context: Context, attrs: AttributeS
 		return PropertyValuesHolder.ofObject(propertyName, ArgbEvaluator(), colorFrom, colorTo)
 	}
 
-	private fun updatePaint(paint: Paint, @ColorRes lightColor: Int, @ColorRes darkColor: Int) {
-		val colorRes = if (isLightThemeEnabled) lightColor else darkColor
-		paint.color = ContextCompat.getColor(context, colorRes)
-	}
-
 	fun setScrollListener(listener: PreviewScrollListener) {
 		scrollListener = listener
 	}
 
 	fun setPreviewSize(newSize: Float) {
-		initialSize = newSize
 		previewWidth = newSize
 		startX = mViewWidth - newSize
 		endX = mViewWidth
@@ -242,8 +237,8 @@ class SelectorView @JvmOverloads constructor(context: Context, attrs: AttributeS
 
 		private fun resizePreview() {
 			when {
-				leftExpansionMode && newX < endX - initialSize -> handleLeftExtension()
-				rightExpansionMode && newX > startX + initialSize -> handleRightExpansion()
+				leftExpansionMode && newX < endX - minSize -> handleLeftExtension()
+				rightExpansionMode && newX > startX + minSize -> handleRightExpansion()
 			}
 		}
 
