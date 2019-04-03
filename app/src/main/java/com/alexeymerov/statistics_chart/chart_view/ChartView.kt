@@ -1,5 +1,6 @@
 package com.alexeymerov.statistics_chart.chart_view
 
+import android.R.attr
 import android.animation.ArgbEvaluator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
@@ -23,16 +24,17 @@ import com.alexeymerov.statistics_chart.chart_view.preview_view.PreviewScrollVie
 import com.alexeymerov.statistics_chart.interfaces.PreviewScrollListener
 import com.alexeymerov.statistics_chart.interfaces.UpdatableTheme
 import com.alexeymerov.statistics_chart.model.ChartLine
+import com.alexeymerov.statistics_chart.model.DateItem
 import com.alexeymerov.statistics_chart.utils.SPHelper
 import com.alexeymerov.statistics_chart.utils.dpToPx
 
 class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : LinearLayout(context, attrs, defStyleAttr), PreviewScrollListener, UpdatableTheme {
 
-	private var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
+	override var isLightThemeEnabled = SPHelper.getShared(App.THEME_SHARED_KEY, true)
 
-	private val MARGIN_8 = 8.dpToPx()
-	private val MARGIN_16 = 16.dpToPx()
+	private val MARGIN_8 = App.MARGIN_8.toInt()
+	private val MARGIN_16 = App.MARGIN_16.toInt()
 
 	private val COLOR_PROPERTY = "color"
 
@@ -41,12 +43,13 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 	private val previewScrollBar: PreviewScrollView
 	private val lineNamesList: LinearLayout
 
-	private val totalHeight = 350.dpToPx()
-	private val onePartHeight = (totalHeight / 5)
-	private val chartHeight = onePartHeight * 4
-	private val scrollBarHeight = totalHeight / 6
+	private val chartHeight = 320.dpToPx()
+	private val scrollBarHeight = 40.dpToPx()
+	private val scaleFactor = 4f
 
 	private lateinit var colorAnimation: ValueAnimator
+	private var disabledLines = 0
+
 
 	init {
 		setPadding(MARGIN_16, MARGIN_8, MARGIN_16, MARGIN_8)
@@ -88,7 +91,7 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 
 	private fun createLineView() = LineView(context).apply {
 		layoutParams = LayoutParams(MATCH_PARENT, chartHeight)
-		onDataLoaded = { previewScrollBar.setPreviewSize(lineView.width.toFloat() / 4f) }
+		onDataLoaded = { previewScrollBar.setPreviewSize(lineView.width.toFloat() / scaleFactor) }
 	}
 
 	private fun createPreviewLineView() = PreviewScrollView(context).apply {
@@ -107,13 +110,18 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 		setBackgroundColor(ContextCompat.getColor(context, color))
 	}
 
-	fun setDataList(chartLines: List<ChartLine>, labelsList: List<String>) {
+	fun setDataList(chartLines: List<ChartLine>, labelsList: List<DateItem>) {
 		lineView.setData(chartLines, labelsList)
 		previewScrollBar.setData(chartLines, labelsList)
+		addCheckBoxes(chartLines)
+	}
 
+	private fun addCheckBoxes(chartLines: List<ChartLine>) {
 		lineNamesList.removeAllViews()
+
 		val color = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
-		val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
+		val states = arrayOf(intArrayOf(attr.state_checked), intArrayOf())
+		val checkBoxList = mutableListOf<CheckBox>()
 		chartLines.forEachIndexed { index, chartLine ->
 			val checkBox = CheckBox(context).apply {
 				text = chartLine.name
@@ -126,13 +134,22 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 					if (index > 0) setMargins(0, MARGIN_8, 0, 0)
 				}
 
-				setOnCheckedChangeListener { _, _ ->
+				setOnCheckedChangeListener { _, isChecked ->
 					run {
+						if (isChecked) disabledLines-- else disabledLines++
+						val needEnable = disabledLines < chartLines.size - 1
+						for (check in checkBoxList) {
+							if (check.isChecked) {
+								check.isEnabled = needEnable
+								check.alpha = if (needEnable) 1f else 0.5f
+							}
+						}
 						lineView.toggleLine(index)
 						previewScrollBar.toggleLine(index)
 					}
 				}
 			}
+			checkBoxList.add(checkBox)
 			lineNamesList.addView(checkBox)
 		}
 	}

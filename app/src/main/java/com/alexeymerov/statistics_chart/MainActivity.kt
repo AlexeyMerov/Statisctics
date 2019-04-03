@@ -22,17 +22,15 @@ import com.alexeymerov.statistics_chart.chart_view.ChartView
 import com.alexeymerov.statistics_chart.interfaces.UpdatableTheme
 import com.alexeymerov.statistics_chart.utils.ChartDataParser
 import com.alexeymerov.statistics_chart.utils.SPHelper
+import java.lang.ref.WeakReference
 
 class MainActivity : AppCompatActivity(), UpdatableTheme {
 
 	private lateinit var linearLayout: LinearLayout
 	private lateinit var scrollView: ScrollView
 	private var chartViews = mutableListOf<ChartView>()
-	private val chartDataParser by lazy { ChartDataParser() }
-	private var themeMenuItem: MenuItem? = null
-	private var isLightThemeEnabled = true
-	private val moonIcon by lazy { ContextCompat.getDrawable(this, R.drawable.ic_moon) }
-	private val sunIcon by lazy { ContextCompat.getDrawable(this, R.drawable.ic_sun) }
+	private var chartDataParser: WeakReference<ChartDataParser>? = null
+	override var isLightThemeEnabled = true
 
 	override fun onCreate(savedInstanceState: Bundle?) {
 		isLightThemeEnabled = SPHelper.getShared(THEME_SHARED_KEY, true)
@@ -40,7 +38,8 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 
 		super.onCreate(savedInstanceState)
 		setContentView(createLayout())
-		chartDataParser.parseJsonRawRes(this, R.raw.chart_data) { allCharts ->
+		chartDataParser = WeakReference(ChartDataParser())
+		chartDataParser?.get()?.parseJsonRawRes(this, R.raw.chart_data) { allCharts ->
 			allCharts.forEach {
 				val chartView = ChartView(this).apply {
 					layoutParams = layoutParams()
@@ -51,6 +50,9 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 				chartViews.add(chartView)
 				linearLayout.addView(chartView)
 			}
+			chartDataParser?.clear()
+			chartDataParser = null
+
 		}
 	}
 
@@ -77,16 +79,15 @@ class MainActivity : AppCompatActivity(), UpdatableTheme {
 		ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
 
 	override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-		themeMenuItem = menu?.add(Menu.NONE, 0, Menu.NONE, getString(R.string.switch_themes))
-		themeMenuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
-		themeMenuItem?.icon = if (isLightThemeEnabled) moonIcon else sunIcon
+		val menuItem = menu?.add(Menu.NONE, 0, Menu.NONE, getString(R.string.switch_themes))
+		menuItem?.setShowAsAction(MenuItem.SHOW_AS_ACTION_ALWAYS)
+		menuItem?.icon = ContextCompat.getDrawable(this, R.drawable.ic_moon)
 		return super.onCreateOptionsMenu(menu)
 	}
 
 	override fun onOptionsItemSelected(item: MenuItem?): Boolean {
 		if (item?.itemId == 0) {
 			isLightThemeEnabled = !isLightThemeEnabled
-			themeMenuItem?.icon = if (isLightThemeEnabled) moonIcon else sunIcon
 			SPHelper.setShared(THEME_SHARED_KEY, isLightThemeEnabled)
 			updateTheme(isLightThemeEnabled)
 		}
