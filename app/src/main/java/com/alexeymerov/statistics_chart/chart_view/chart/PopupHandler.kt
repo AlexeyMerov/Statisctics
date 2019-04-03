@@ -33,8 +33,12 @@ class PopupHandler(private val lineView: LineView) {
 
 	private val rectText = Rect()
 
+	private val SIZE_10 = 10.spToPxFloat()
+	private val SIZE_12 = 12.spToPxFloat()
+	private val SIZE_14 = 14.spToPxFloat()
+
 	private val popupTextPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-		textSize = 12.spToPxFloat()
+		textSize = SIZE_12
 		textAlign = Paint.Align.LEFT
 		typeface = Typeface.DEFAULT_BOLD
 	}
@@ -82,7 +86,7 @@ class PopupHandler(private val lineView: LineView) {
 			canvas.drawCircle(initialX, y, DOT_SMALL_RADIUS, smallDotPaint)
 		}
 
-		popupTextPaint.textSize = 12.spToPxFloat()
+		popupTextPaint.textSize = SIZE_12
 		popupTextPaint.typeface = Typeface.DEFAULT_BOLD
 		popupTextPaint.getTextBounds(longestWord, 0, longestWord.length, rectText)
 		val lineHeight = rectText.height().toFloat()
@@ -120,7 +124,7 @@ class PopupHandler(private val lineView: LineView) {
 		var lastTextY = startY + MARGIN_16
 
 		popupTextPaint.color = if (lineView.isLightThemeEnabled) Color.BLACK else Color.WHITE
-		popupTextPaint.textSize = 12.spToPxFloat()
+		popupTextPaint.textSize = SIZE_12
 		canvas.drawText(dateString, startXFirstColumn, lastTextY, popupTextPaint)
 
 		lastTextY += lineHeight + MARGIN_12
@@ -141,10 +145,10 @@ class PopupHandler(private val lineView: LineView) {
 
 			popupTextPaint.color = popup.color
 			popupTextPaint.typeface = Typeface.DEFAULT_BOLD
-			popupTextPaint.textSize = 14.spToPxFloat()
+			popupTextPaint.textSize = SIZE_14
 			canvas.drawText(valueString, startXForText, lastTextY, popupTextPaint)
 
-			popupTextPaint.textSize = 10.spToPxFloat()
+			popupTextPaint.textSize = SIZE_10
 			popupTextPaint.typeface = Typeface.DEFAULT
 			canvas.drawText(popup.line.name, startXForText, lastTextY + lineHeight + MARGIN_2, popupTextPaint)
 		}
@@ -169,7 +173,7 @@ class PopupHandler(private val lineView: LineView) {
 	}
 
 	private fun calculateStringBounds(valueString: String) {
-		popupTextPaint.textSize = 14.spToPxFloat()
+		popupTextPaint.textSize = SIZE_14
 		popupTextPaint.getTextBounds(valueString, 0, valueString.length, rectText)
 	}
 
