@@ -128,30 +128,33 @@ class PopupHandler(private val lineView: LineView) {
 		canvas.drawText(dateString, startXFirstColumn, lastTextY, popupTextPaint)
 
 		lastTextY += lineHeight + MARGIN_12
-		for ((index, popup) in popupList.withIndex()) {
-			if (!popup.line.isEnabled) continue
-			val valueString = getValueString(popup)
-			calculateStringBounds(valueString)
+		popupList
+			.asSequence()
+			.filter { it.line.isEnabled }
+			.withIndex()
+			.forEach { (index, popup) ->
+				val valueString = getValueString(popup)
+				calculateStringBounds(valueString)
 
-			if (index == 0) startXSecondColumn = startXFirstColumn + rectText.width() + MARGIN_16
-			val startXForText: Float
-			when {
-				index % 2 == 0 -> {
-					startXForText = startXFirstColumn
-					if (index > 0) lastTextY += (lineHeight * 2) + MARGIN_12
+				if (index == 0) startXSecondColumn = startXFirstColumn + rectText.width() + MARGIN_16
+				val startXForText: Float
+				when {
+					index % 2 == 0 -> {
+						startXForText = startXFirstColumn
+						if (index > 0) lastTextY += (lineHeight * 2) + MARGIN_12
+					}
+					else -> startXForText = startXSecondColumn
 				}
-				else -> startXForText = startXSecondColumn
+
+				popupTextPaint.color = popup.color
+				popupTextPaint.typeface = Typeface.DEFAULT_BOLD
+				popupTextPaint.textSize = SIZE_14
+				canvas.drawText(valueString, startXForText, lastTextY, popupTextPaint)
+
+				popupTextPaint.textSize = SIZE_10
+				popupTextPaint.typeface = Typeface.DEFAULT
+				canvas.drawText(popup.line.name, startXForText, lastTextY + lineHeight + MARGIN_2, popupTextPaint)
 			}
-
-			popupTextPaint.color = popup.color
-			popupTextPaint.typeface = Typeface.DEFAULT_BOLD
-			popupTextPaint.textSize = SIZE_14
-			canvas.drawText(valueString, startXForText, lastTextY, popupTextPaint)
-
-			popupTextPaint.textSize = SIZE_10
-			popupTextPaint.typeface = Typeface.DEFAULT
-			canvas.drawText(popup.line.name, startXForText, lastTextY + lineHeight + MARGIN_2, popupTextPaint)
-		}
 	}
 
 	private fun calculatePopupXY(lineHeight: Float): Pair<Float, Float> {
@@ -159,14 +162,16 @@ class PopupHandler(private val lineView: LineView) {
 		var startXSecondColumn = startXFirstColumn
 		var lastTextY = startY + MARGIN_16 + lineHeight + MARGIN_12
 
-		for ((index, popup) in popupList.withIndex()) {
-			if (!popup.line.isEnabled) continue
-			val valueString = getValueString(popup)
-			calculateStringBounds(valueString)
-
-			if (index == 0) startXSecondColumn = startXFirstColumn + rectText.width() + MARGIN_16
-			if (index % 2 == 0 && index > 0) lastTextY += (lineHeight * 2) + MARGIN_12
-		}
+		popupList
+			.asSequence()
+			.filter { it.line.isEnabled }
+			.withIndex()
+			.forEach { (index, popup) ->
+				val valueString = getValueString(popup)
+				calculateStringBounds(valueString)
+				if (index == 0) startXSecondColumn = startXFirstColumn + rectText.width() + MARGIN_16
+				if (index % 2 == 0 && index > 0) lastTextY += (lineHeight * 2) + MARGIN_12
+			}
 		val endX = startXSecondColumn + rectText.width()
 		val endY = lastTextY + lineHeight + MARGIN_2
 		return endX to endY
