@@ -1,5 +1,6 @@
 package com.alexeymerov.statistics_chart.chart_view
 
+import android.R.attr
 import android.animation.ArgbEvaluator
 import android.animation.PropertyValuesHolder
 import android.animation.ValueAnimator
@@ -47,6 +48,8 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 	private val scaleFactor = 4f
 
 	private lateinit var colorAnimation: ValueAnimator
+	private var disabledLines = 0
+
 
 	init {
 		setPadding(MARGIN_16, MARGIN_8, MARGIN_16, MARGIN_8)
@@ -110,10 +113,15 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 	fun setDataList(chartLines: List<ChartLine>, labelsList: List<DateItem>) {
 		lineView.setData(chartLines, labelsList)
 		previewScrollBar.setData(chartLines, labelsList)
+		addCheckBoxes(chartLines)
+	}
 
+	private fun addCheckBoxes(chartLines: List<ChartLine>) {
 		lineNamesList.removeAllViews()
+
 		val color = if (isLightThemeEnabled) Color.BLACK else Color.WHITE
-		val states = arrayOf(intArrayOf(android.R.attr.state_checked), intArrayOf())
+		val states = arrayOf(intArrayOf(attr.state_checked), intArrayOf())
+		val checkBoxList = mutableListOf<CheckBox>()
 		chartLines.forEachIndexed { index, chartLine ->
 			val checkBox = CheckBox(context).apply {
 				text = chartLine.name
@@ -126,13 +134,22 @@ class ChartView @JvmOverloads constructor(context: Context, attrs: AttributeSet?
 					if (index > 0) setMargins(0, MARGIN_8, 0, 0)
 				}
 
-				setOnCheckedChangeListener { _, _ ->
+				setOnCheckedChangeListener { _, isChecked ->
 					run {
+						if (isChecked) disabledLines-- else disabledLines++
+						val needEnable = disabledLines < chartLines.size - 1
+						for (check in checkBoxList) {
+							if (check.isChecked) {
+								check.isEnabled = needEnable
+								check.alpha = if (needEnable) 1f else 0.5f
+							}
+						}
 						lineView.toggleLine(index)
 						previewScrollBar.toggleLine(index)
 					}
 				}
 			}
+			checkBoxList.add(checkBox)
 			lineNamesList.addView(checkBox)
 		}
 	}
