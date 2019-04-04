@@ -257,12 +257,15 @@ class LineView @JvmOverloads constructor(context: Context, attrs: AttributeSet? 
 
 	fun update(newStart: Float, newLength: Float) {
 		popupHandler.reset()
+		val oldValue = getVerticalMaxValue()
+		stopAnimation()
 		val ratio = widthFloat / newLength
 		stepX = (widthFloat / bottomLabelsList.size.toFloat()) * ratio
 		xValuesToDisplay = (widthFloat / stepX).toInt() + 1
 		startIndex = ((newStart / stepX) * ratio).toInt()
 		updateVerticalMaxValue()
-		postInvalidate()
+		val newValue = getVerticalMaxValue()
+		callAnimation(oldValue, newValue)
 	}
 
 	override fun updateTheme(lightThemeEnabled: Boolean) {

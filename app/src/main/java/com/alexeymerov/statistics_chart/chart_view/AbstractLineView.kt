@@ -50,7 +50,7 @@ abstract class AbstractLineView @JvmOverloads constructor(context: Context, attr
 	}
 
 	private val valueAnimator = ValueAnimator().apply {
-		duration = 500
+		duration = 250
 		interpolator = AccelerateDecelerateInterpolator()
 		repeatMode = ValueAnimator.RESTART
 		addUpdateListener { postInvalidate() }
@@ -72,6 +72,10 @@ abstract class AbstractLineView @JvmOverloads constructor(context: Context, attr
 	protected fun callAnimation(oldMaxValue: Float, newMaxValue: Float) {
 		valueAnimator.setValues(PropertyValuesHolder.ofFloat(LINES_PROPERTY_NAME, oldMaxValue, newMaxValue))
 		valueAnimator.start()
+	}
+
+	protected fun stopAnimation() {
+		if (valueAnimator.isRunning) valueAnimator.cancel()
 	}
 
 	protected abstract fun drawLines(canvas: Canvas)
